@@ -33,10 +33,10 @@ services:
       - REMOTE_USER=
       - REMOTE_BACKUP_PATH=
       - REMOTE_SSH_FILE= # Should be in the /keys volume
-      - RATE_LIMIT=3000000 # 3MB/s
+      - RATE_LIMIT=3000000 # 30 Mbps
       - BACKUP_PATHS= "/backup_targets/data_1,/backup_targets/data_2"
       - EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
-      - BORG_RSH="/scripts/rate_limit.sh ssh"
+      - CRON_SCHEDULE= "0 2 * * *" # Daily at 2 AM
     volumes:
       - /Config/backup:/config
       - /Config/backup/cache:~/.cache/borg # Keep this in a persistent volume 
@@ -44,6 +44,6 @@ services:
       - /path/to/data_1:/backup_targets/data_1
       - /path/to/data_2:/backup_targets/data_2
     command: ["/bin/sh", "-c", "tail -f /dev/null"] 
-    #labels:
-    #  - com.centurylinklabs.watchtower.monitor-only="true" # Recommended if using watchtower
+    labels:
+     - com.centurylinklabs.watchtower.monitor-only="true" # Recommended if using watchtower to not interrupt the backups
     restart: unless-stopped

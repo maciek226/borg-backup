@@ -77,7 +77,10 @@ else
     exit 1
 fi
 
-# 5. check if rate_limit.sh exists
+# 5. update/create rate_limit.sh
+echo '#!/bin/bash' > "/scripts/rate_limit.sh"
+echo "pv -q -L $RATE_LIMIT | \"\$@\"" >> "/scripts/rate_limit.sh"
+
 if [ -e /scripts/rate_limit.sh ]; then
     echo "Found rate_limit.sh"
 else
@@ -103,7 +106,7 @@ fi
 # 7. Get the repo key
 borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH --passphrase $BORG_PASSPHRASE --output /keys/repo_key
 
-# 7. Run the backup command on schedule and in a loop 
+# 7. Run the first backup
 
 # 8. Prune the repo
 #prune_repo() 
