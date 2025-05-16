@@ -1,0 +1,20 @@
+FROM alpine:latest 
+ADD start_script.sh /scripts/start_script.sh
+ADD rate_limit.sh /scripts/rate_limit.sh
+ADD backup.sh /scripts/backup.sh
+
+ENV BORG_PASSPHRASE=pass_phrase
+ENV REMOTE_IP=0.0.0.0
+ENV REMOTE_USER=user
+ENV REMOTE_BACKUP_PATH=/path/to/backup
+ENV REMOTE_SSH_FILE=/path/to/ssh
+ENV RATE_LIMIT=3000000
+ENV BACKUP_PATHS=/backup_targets/data_1,/backup_targets/data_2
+ENV EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
+ENV BORG_RSH="/scripts/rate_limit.sh ssh"
+
+RUN apk add --no-cache bash borgbackup openssh cronie nano grep pv
+RUN chmod +x /start_script.sh
+
+ENTRYPOINT ["/start_script.sh"]
+CMD ["/bin/sh", "-c", "exec /bin/bash -l"] 

@@ -1,0 +1,49 @@
+services:
+  wireguard_backup:
+    image: lscr.io/linuxserver/wireguard
+    container_name: wireguard_backup
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /path/to/config/:/config/wg_confs/
+      - /lib/modules:/lib/modules
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+    labels:
+      - com.centurylinklabs.watchtower.monitor-only="true"
+
+  rsync:
+    image: rsync:latest
+    container_name: rsync_backup
+    depends_on:
+      - wireguard_backup
+    network_mode: service:wireguard_backup
+    environment:
+      - BORG_PASSPHRASE=
+      - REMOTE_IP=
+      - REMOTE_USER=
+      - REMOTE_BACKUP_PATH=
+      - REMOTE_SSH_FILE= # Should be in the /keys volume
+      - RATE_LIMIT=3000000 # 3MB/s
+      - BACKUP_PATHS= "/backup_targets/data_1,/backup_targets/data_2"
+      - EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
+      - BORG_RSH="/scripts/rate_limit.sh ssh"
+    volumes:
+      - /Config/backup:/config
+      - /Config/backup/cache:~/.cache/borg # Keep this in a persistent volume 
+      - /Config/backup:/keys
+      - /path/to/data_1:/backup_targets/data_1
+      - /path/to/data_2:/backup_targets/data_2
+    command: ["/bin/sh", "-c", "tail -f /dev/null"] 
+    #labels:
+    #  - com.centurylinklabs.watchtower.monitor-only="true" # Recommended if using watchtower
+    restart: unless-stopped
