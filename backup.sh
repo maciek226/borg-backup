@@ -15,25 +15,21 @@ if [ -z "$PREVIOUS_BACKUP_NAME" ]; then
 else
     echo "Previous backup: $PREVIOUS_BACKUP_NAME"
     # Check if the previous backup is complete 
-    borg check $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::"$PREVIOUS_BACKUP_NAME"
+    borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+    borg list --consider-checkpoints $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::"$PREVIOUS_BACKUP_NAME"
     if [ $? -eq 0 ]; then
         echo "Previous backup is complete"
         CREATE_NEW_BACKUP=true
     else
         echo "Previous backup is not complete"
-        borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-
-        # Check if the previous backup has even started 
         borg list --consider-checkpoints $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH | grep -q "Checkpoint"
-    #     if [ $? -eq 0 ]; then
-    #         echo "Previous backup is a checkpoint"
-    #         # Continue the previous backup
-    #         borg continue $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::"$PREVIOUS_BACKUP_NAME"
-    #     else
-    #         echo "Previous backup is not a checkpoint"
-    #         # Start a new backup
-    #         borg create $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::"$CURRENT_BACKUP_NAME" /path/to/backup
-        # fi
+        if [ $? -eq 0 ]; then
+            echo "Previous backup does not have a checkpoint - creating new backup"
+            CREATE_NEW_BACKUP=true
+        else
+            echo "Previous backup has a checkpoint, continuing backup"
+            CREATE_NEW_BACKUP=false
+        fi
         CREATE_NEW_BACKUP=false
     fi
 fi
@@ -53,10 +49,37 @@ if [ "$CREATE_NEW_BACKUP" = true ]; then
     echo "Creating new backup"
     # Replace the log file with the new backup name
     echo "$NEW_NAME" > "$BACKUP_LOG_FILE"
-    # Create a new backup
-    borg create --progress --stats $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$NEW_NAME $INCLUDE_FLAGS
+    while true; do
+        borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+        borg create --progress --stats $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$NEW_NAME $INCLUDE_FLAGS
+        if [ $? -eq 0 ]; then
+            break
+        else
+            echo "Backup failed, retrying..."
+        fi
+    done
 else
     echo "Continuing previous backup"
-    # Continue the previous backup
-    borg create --progress --stats $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
+    while true; do
+        borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+        borg create --progress --stats $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
+        if [ $? -eq 0 ]; then
+            break
+        else
+            echo "Backup failed, retrying..."
+        fi
+    done
+fi
+
+borg prune --list --stats $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+if [ $? -eq 0 ]; then
+    cho "Pruning successful"
+else
+    echo "Pruning failed"
+fi
+borg compact --progress $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+if [ $? -eq 0 ]; then
+    cho "Compacting successful"
+else
+    echo "Compacting failed"
 fi

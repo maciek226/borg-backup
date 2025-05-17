@@ -37,6 +37,7 @@ services:
       - BACKUP_PATHS= "/backup_targets/data_1,/backup_targets/data_2"
       - EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
       - CRON_SCHEDULE= "0 2 * * *" # Daily at 2 AM
+      - BORG_PRUNE_CMD="--keep-within=10d --keep-weekly=4"
     volumes:
       - /Config/backup:/config
       - /Config/backup/cache:~/.cache/borg # Keep this in a persistent volume 

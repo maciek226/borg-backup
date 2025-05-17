@@ -1,20 +1,5 @@
 #!/bin/bash
 
-# NEED TO MODIFY OTHER SCRITPS
-# 1. add achieve name
-# 2. add backup frequancy 
-
-prune_repo() {
-    borg check $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-    borg prune  --stats --list --stats --keep-last=1 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH #--dry-run
-}
-
-# Function to compact the repo
-compact_repo() {
-    borg check $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-    borg compact $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-}
-
 echo "Starting container..."
 
 # 1. Check if the SSH key exists 
@@ -96,23 +81,13 @@ else
     exit 1
 fi
 
-if borg check $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
-  echo "Repository exists and is healthy"
+if borg check --repository-only --max-duration 10 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
+    echo "Repository exists and is healthy"
 else
-  echo "Repository does not exist"
-  borg init --encryption=repokey $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+    echo "Repository does not exist"
+    borg init --encryption=repokey $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+    borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH --passphrase $BORG_PASSPHRASE --output /keys/repo_key
 fi
 
-# 7. Get the repo key
-borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH --passphrase $BORG_PASSPHRASE --output /keys/repo_key
 
-# 7. Run the first backup
-
-# 8. Prune the repo
-#prune_repo() 
-
-# 9. Compact the repo
-#compact_repo()
-
-# 10. Set a scheduled task 
 
