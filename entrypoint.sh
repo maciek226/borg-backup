@@ -89,5 +89,3 @@ else
     borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH --passphrase $BORG_PASSPHRASE --output /keys/repo_key
 fi
 
-
-

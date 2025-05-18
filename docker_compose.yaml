@@ -21,23 +21,24 @@ services:
     labels:
       - com.centurylinklabs.watchtower.monitor-only="true"
 
-  rsync:
-    image: rsync:latest
-    container_name: rsync_backup
+  borg:
+    image: borg_backups:latest
+    container_name: borg_backup
     depends_on:
       - wireguard_backup
     network_mode: service:wireguard_backup
     environment:
+      - TZ=Etc/UTC
       - BORG_PASSPHRASE=
       - REMOTE_IP=
       - REMOTE_USER=
       - REMOTE_BACKUP_PATH=
       - REMOTE_SSH_FILE= # Should be in the /keys volume
       - RATE_LIMIT=3000000 # 30 Mbps
-      - BACKUP_PATHS= "/backup_targets/data_1,/backup_targets/data_2"
+      - BACKUP_PATHS="/backup_targets/data_1,/backup_targets/data_2"
       - EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
       - CRON_SCHEDULE= "0 2 * * *" # Daily at 2 AM
-      - BORG_PRUNE_CMD="--keep-within=10d --keep-weekly=4"
+      - BORG_PRUNE_CMD='--keep-within=10d --keep-weekly=4'
     volumes:
       - /Config/backup:/config
       - /Config/backup/cache:~/.cache/borg # Keep this in a persistent volume 

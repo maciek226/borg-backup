@@ -12,6 +12,7 @@ fi
 
 if [ -z "$PREVIOUS_BACKUP_NAME" ]; then
     echo "No previous backup found"
+    CREATE_NEW_BACKUP=true
 else
     echo "Previous backup: $PREVIOUS_BACKUP_NAME"
     # Check if the previous backup is complete 
@@ -40,9 +41,11 @@ IFS=',' read -ra PATHS <<< "$EXCLUDE_PATHS"
 for path in "${PATHS[@]}"; do
     EXCLUDE_FLAGS+="--exclude $path "
 done
+echo "Exclude flags: $EXCLUDE_FLAGS"
 
 IFS=',' read -ra PATHS <<< "$BACKUP_PATHS"
 INCLUDE_FLAGS="${PATHS[@]}"
+echo "Include flags: $INCLUDE_FLAGS"
 
 if [ "$CREATE_NEW_BACKUP" = true ]; then
     NEW_NAME=$(date +%Y-%m-%d_%H-%M-%S)
@@ -51,8 +54,10 @@ if [ "$CREATE_NEW_BACKUP" = true ]; then
     echo "$NEW_NAME" > "$BACKUP_LOG_FILE"
     while true; do
         borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-        borg create --progress --stats $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$NEW_NAME $INCLUDE_FLAGS
+        borg create --progress --stats --show-rc  $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$NEW_NAME $INCLUDE_FLAGS
+        echo $?
         if [ $? -eq 0 ]; then
+            echo "Backup successful"
             break
         else
             echo "Backup failed, retrying..."
@@ -62,8 +67,9 @@ else
     echo "Continuing previous backup"
     while true; do
         borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-        borg create --progress --stats $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
+        borg create --show-rc --progress $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
         if [ $? -eq 0 ]; then
+            echo "Backup successful"
             break
         else
             echo "Backup failed, retrying..."
@@ -71,13 +77,13 @@ else
     done
 fi
 
-borg prune --list --stats $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+borg prune --show-rc --progress --list $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
 if [ $? -eq 0 ]; then
-    cho "Pruning successful"
+    echo "Pruning successful"
 else
     echo "Pruning failed"
 fi
-borg compact --progress $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+borg compact --progress --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
 if [ $? -eq 0 ]; then
     cho "Compacting successful"
 else
