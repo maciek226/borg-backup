@@ -17,13 +17,13 @@ else
     echo "Previous backup: $PREVIOUS_BACKUP_NAME"
     # Check if the previous backup is complete 
     borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-    borg list --consider-checkpoints $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::"$PREVIOUS_BACKUP_NAME"
+    borg list --consider-checkpoints --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::"$PREVIOUS_BACKUP_NAME"
     if [ $? -eq 0 ]; then
         echo "Previous backup is complete"
         CREATE_NEW_BACKUP=true
     else
         echo "Previous backup is not complete"
-        borg list --consider-checkpoints $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH | grep -q "Checkpoint"
+        borg list --consider-checkpoints --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH | grep -q "Checkpoint"
         if [ $? -eq 0 ]; then
             echo "Previous backup does not have a checkpoint - creating new backup"
             CREATE_NEW_BACKUP=true
@@ -67,7 +67,7 @@ else
     echo "Continuing previous backup"
     while true; do
         borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-        borg create --show-rc --progress $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
+        borg create --show-rc --stats --progress $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
         if [ $? -eq 0 ]; then
             echo "Backup successful"
             break

@@ -81,7 +81,7 @@ else
     exit 1
 fi
 
-if borg check --repository-only --max-duration 10 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
+if borg check --repository-only --max-duration --show-rc 10 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
     echo "Repository exists and is healthy"
 else
     echo "Repository does not exist"
