@@ -21,5 +21,5 @@ RUN apk add --no-cache bash borgbackup openssh cronie nano grep pv
 RUN chmod +x /scripts/entrypoint.sh
 RUN chmod +x /scripts/backup.sh
 
-ENTRYPOINT [". /scripts/entrypoint.sh 2>&1 | tee /proc/1/fd/1 && tail -f /dev/null"]
+ENTRYPOINT ["/bin/sh", "-c", ". /scripts/entrypoint.sh 2>&1 | tee /proc/1/fd/1 && tail -f /dev/null"]
 CMD ["/bin/sh", "-c", "exec /bin/bash -l"] 
