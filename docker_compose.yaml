@@ -22,7 +22,7 @@ services:
       - com.centurylinklabs.watchtower.monitor-only="true"
 
   borg:
-    image: borg_backups:latest
+    image: mbl226/borg-backup:latest
     container_name: borg_backup
     depends_on:
       - wireguard_backup
