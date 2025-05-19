@@ -1,5 +1,11 @@
 #!/bin/bash
 
+echo "Starting backup script..."
+CURRENT_TIME=$(date +%Y-%m-%d_%H-%M-%S)
+echo "Current time: $CURRENT_TIME"
+
+# TODO: check connection to the remote server
+
 BACKUP_LOG_FILE="/config/last_backup.txt"
 
 if [ -e "$BACKUP_LOG_FILE" ]; then
@@ -90,3 +96,6 @@ if [ $? -eq 0 ]; then
 else
     echo "Compacting failed"
 fi
+
+CURRENT_TIME=$(date +%Y-%m-%d_%H-%M-%S)
+echo "Finished at: $CURRENT_TIME"
