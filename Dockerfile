@@ -1,4 +1,7 @@
 FROM alpine:latest 
+
+WORKDIR /
+RUN mkdir -p /scripts
 ADD entrypoint.sh /scripts/entrypoint.sh
 ADD backup.sh /scripts/backup.sh
 
@@ -10,11 +13,13 @@ ENV REMOTE_SSH_FILE=/path/to/ssh
 ENV RATE_LIMIT=3000000
 ENV BACKUP_PATHS=/backup_targets/data_1,/backup_targets/data_2
 ENV EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
-ENV CRON_SCHEDULE="0 0 * * *"
-ENV BORG_PRUNE_CMD="--keep-within=10d --keep-weekly=4"
+ENV CRON_SCHEDULE='0 0 * * *'
+ENV BORG_PRUNE_CMD=--keep-within=10d --keep-weekly=4
+ENV COMPACT_THRESHOLD=10
 
 RUN apk add --no-cache bash borgbackup openssh cronie nano grep pv
-RUN chmod +x /start_script.sh
+RUN chmod +x /scripts/entrypoint.sh
+RUN chmod +x /scripts/backup.sh
 
-ENTRYPOINT ["/scripts/entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "-c", ". /scripts/entrypoint.sh 2>&1 | tee /proc/1/fd/1 && tail -f /dev/null"]
 CMD ["/bin/sh", "-c", "exec /bin/bash -l"] 
