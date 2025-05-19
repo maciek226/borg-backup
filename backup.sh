@@ -83,7 +83,8 @@ if [ $? -eq 0 ]; then
 else
     echo "Pruning failed"
 fi
-borg compact --progress --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+
+borg compact --verbose --progress --show-rc --threshold $COMPACT_THRESHOLD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
 if [ $? -eq 0 ]; then
     cho "Compacting successful"
 else

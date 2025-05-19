@@ -13,8 +13,9 @@ ENV REMOTE_SSH_FILE=/path/to/ssh
 ENV RATE_LIMIT=3000000
 ENV BACKUP_PATHS=/backup_targets/data_1,/backup_targets/data_2
 ENV EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
-ENV CRON_SCHEDULE="0 0 * * *"
-ENV BORG_PRUNE_CMD="--keep-within=10d --keep-weekly=4"
+ENV CRON_SCHEDULE='0 0 * * *'
+ENV BORG_PRUNE_CMD=--keep-within=10d --keep-weekly=4
+ENV COMPACT_THRESHOLD=10
 
 RUN apk add --no-cache bash borgbackup openssh cronie nano grep pv
 RUN chmod +x /scripts/entrypoint.sh

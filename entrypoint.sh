@@ -89,3 +89,7 @@ else
     borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH --passphrase $BORG_PASSPHRASE --output /keys/repo_key
 fi
 
+# 7. Schedule the backup
+# TODO: make a separate script that can lock up the command in case the backup is not complete 
+echo "Scheduling backup"
+echo "$CRON_SCHEDULE /scripts/backup.sh" > /etc/crontabs/root

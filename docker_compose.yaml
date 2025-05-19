@@ -35,10 +35,11 @@ services:
       - REMOTE_BACKUP_PATH=
       - REMOTE_SSH_FILE= # Should be in the /keys volume
       - RATE_LIMIT=3000000 # 30 Mbps
-      - BACKUP_PATHS="/backup_targets/data_1,/backup_targets/data_2"
+      - BACKUP_PATHS=/backup_targets/data_1,/backup_targets/data_2
       - EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
-      - CRON_SCHEDULE= "0 2 * * *" # Daily at 2 AM
+      - CRON_SCHEDULE= '0 2 * * *'
       - BORG_PRUNE_CMD='--keep-within=10d --keep-weekly=4'
+      - COMPACT_THRESHOLD=10
     volumes:
       - /Config/backup:/config
       - /Config/backup/cache:~/.cache/borg # Keep this in a persistent volume 
