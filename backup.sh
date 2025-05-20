@@ -111,7 +111,7 @@ fi
 
 borg compact --verbose --progress --show-rc --threshold $COMPACT_THRESHOLD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
 if [ $? -eq 0 ]; then
-    cho "Compacting successful"
+    echo "Compacting successful"
 else
     echo "Compacting failed"
 fi

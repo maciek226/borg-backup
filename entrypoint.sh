@@ -2,6 +2,9 @@
 
 echo "Starting container..."
 
+# 0. Set timezone
+ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime
+
 # 1. Check if the SSH key exists 
 echo "Checking provided SSH key"
 if [ -e $PATH_TO_SSH ]; then
