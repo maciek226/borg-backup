@@ -103,4 +103,5 @@ else
     echo "crond started"
 fi
 
-
+# 8. Save enviromental variables 
+export -p  > /scripts/env_variables.txt
