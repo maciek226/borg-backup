@@ -18,7 +18,7 @@ ENV BORG_PRUNE_CMD=--keep-within=10d --keep-weekly=4
 ENV COMPACT_THRESHOLD=10
 ENV TZ=Etc/UTC
 
-RUN apk add --no-cache bash borgbackup openssh cronie nano grep pv
+RUN apk add --no-cache bash borgbackup openssh cronie nano grep pv tzdata
 RUN chmod +x /scripts/entrypoint.sh
 RUN chmod +x /scripts/backup.sh
 
