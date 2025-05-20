@@ -16,6 +16,7 @@ ENV EXCLUDE_PATHS=/path/to/exclude1/*,/path/to/exclude2/*
 ENV CRON_SCHEDULE='0 0 * * *'
 ENV BORG_PRUNE_CMD=--keep-within=10d --keep-weekly=4
 ENV COMPACT_THRESHOLD=10
+ENV TZ=Etc/UTC
 
 RUN apk add --no-cache bash borgbackup openssh cronie nano grep pv
 RUN chmod +x /scripts/entrypoint.sh

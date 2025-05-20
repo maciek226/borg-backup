@@ -75,7 +75,7 @@ if [ "$CREATE_NEW_BACKUP" = true ]; then
         if [ $? -eq 0 ]; then
             echo "Remote server is reachable"
         else
-            echo "Remote server is not reachable, waiting for 5 seconds"
+            echo "Remote server is not reachable"
             exit 1
         fi
     done
@@ -96,7 +96,7 @@ else
         if [ $? -eq 0 ]; then
             echo "Remote server is reachable"
         else
-            echo "Remote server is not reachable, waiting for 5 seconds"
+            echo "Remote server is not reachable"
             exit 1
         fi
     done
