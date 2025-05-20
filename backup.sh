@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /scripts/env_variables.txt
+
 echo "Starting backup script..."
 CURRENT_TIME=$(date +%Y-%m-%d_%H-%M-%S)
 echo "Current time: $CURRENT_TIME"
@@ -68,6 +70,14 @@ if [ "$CREATE_NEW_BACKUP" = true ]; then
         else
             echo "Backup failed, retrying..."
         fi
+        # Check connection
+        ping -c 5 -W 2 $REMOTE_IP
+        if [ $? -eq 0 ]; then
+            echo "Remote server is reachable"
+        else
+            echo "Remote server is not reachable, waiting for 5 seconds"
+            exit 1
+        fi
     done
 else
     echo "Continuing previous backup"
@@ -79,6 +89,15 @@ else
             break
         else
             echo "Backup failed, retrying..."
+        fi
+
+        # Check connection
+        ping -c 5 -W 2 $REMOTE_IP
+        if [ $? -eq 0 ]; then
+            echo "Remote server is reachable"
+        else
+            echo "Remote server is not reachable, waiting for 5 seconds"
+            exit 1
         fi
     done
 fi
