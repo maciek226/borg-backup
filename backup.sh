@@ -102,7 +102,7 @@ else
     done
 fi
 
-borg prune --show-rc --progress --list $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+borg prune --show-rc --progress $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
 if [ $? -eq 0 ]; then
     echo "Pruning successful"
 else
