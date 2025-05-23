@@ -6,7 +6,19 @@ echo "Starting backup script..."
 CURRENT_TIME=$(date +%Y-%m-%d_%H-%M-%S)
 echo "Current time: $CURRENT_TIME"
 
-# TODO: check connection to the remote server
+check_remote_server() {
+    local REMOTE_IP=$1
+    ping -c 5 -W 2 "$REMOTE_IP"
+    
+    if [ $? -eq 0 ]; then
+        echo "Remote server is reachable"
+    else
+        echo "Remote server is not reachable"
+        return 1
+    fi
+}
+
+check_remote_server $REMOTE_IP || exit 1
 
 BACKUP_LOG_FILE="/config/last_backup.txt"
 
@@ -71,13 +83,7 @@ if [ "$CREATE_NEW_BACKUP" = true ]; then
             echo "Backup failed, retrying..."
         fi
         # Check connection
-        ping -c 5 -W 2 $REMOTE_IP
-        if [ $? -eq 0 ]; then
-            echo "Remote server is reachable"
-        else
-            echo "Remote server is not reachable"
-            exit 1
-        fi
+        check_remote_server $REMOTE_IP || exit 1
     done
 else
     echo "Continuing previous backup"
@@ -92,13 +98,7 @@ else
         fi
 
         # Check connection
-        ping -c 5 -W 2 $REMOTE_IP
-        if [ $? -eq 0 ]; then
-            echo "Remote server is reachable"
-        else
-            echo "Remote server is not reachable"
-            exit 1
-        fi
+        check_remote_server $REMOTE_IP || exit 1
     done
 fi
 
