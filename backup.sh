@@ -37,7 +37,7 @@ else
     echo "Previous backup: $PREVIOUS_BACKUP_NAME"
     # Check if the previous backup is complete 
     borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-    borg list --consider-checkpoints --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::"$PREVIOUS_BACKUP_NAME"
+    borg list --consider-checkpoints --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::"$PREVIOUS_BACKUP_NAME" >> /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo "Previous backup is complete"
         CREATE_NEW_BACKUP=true
@@ -74,7 +74,7 @@ if [ "$CREATE_NEW_BACKUP" = true ]; then
     echo "$NEW_NAME" > "$BACKUP_LOG_FILE"
     while true; do
         borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-        borg create --progress --stats --show-rc  $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$NEW_NAME $INCLUDE_FLAGS
+        borg create --progress --stats --show-rc  $EXCLUDE_FLAGS --checkpoint-interval 60 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$NEW_NAME $INCLUDE_FLAGS
         echo $?
         if [ $? -eq 0 ]; then
             echo "Backup successful"
@@ -89,7 +89,7 @@ else
     echo "Continuing previous backup"
     while true; do
         borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-        borg create --show-rc --stats --progress $EXCLUDE_FLAGS --checkpoint-interval 30 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
+        borg create --show-rc --stats --progress $EXCLUDE_FLAGS --checkpoint-interval 60 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
         if [ $? -eq 0 ]; then
             echo "Backup successful"
             break
@@ -109,7 +109,7 @@ else
     echo "Pruning failed"
 fi
 
-borg compact --verbose --progress --show-rc --threshold $COMPACT_THRESHOLD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+borg compact --progress --show-rc --threshold $COMPACT_THRESHOLD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
 if [ $? -eq 0 ]; then
     echo "Compacting successful"
 else
@@ -118,3 +118,6 @@ fi
 
 CURRENT_TIME=$(date +%Y-%m-%d_%H-%M-%S)
 echo "Finished at: $CURRENT_TIME"
+
+echo "Trimming the log files"
+logrotate /etc/logrotate.d/backup

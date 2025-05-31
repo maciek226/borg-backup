@@ -84,27 +84,63 @@ else
     exit 1
 fi
 
+# To avoid issues where a drive where the borg repo is stored is not mounted yet
+if [ -e /config/repo_exists ]; then
+    echo "Found repo_exists file"
+    SAVED_REMOTE_BACKUP_PATH=$(cat /config/repo_exists)
+    if [ "$SAVED_REMOTE_BACKUP_PATH" == "$REMOTE_BACKUP_PATH" ]; then
+        echo "Remote backup path matches saved path"
+    else
+        echo "Remote backup path does not match saved path, updating..."
+        echo $REMOTE_BACKUP_PATH > /config/repo_exists
+    fi
+else
+    echo "repo_exists file not found"
+fi
+
 if borg check --repository-only --max-duration 10 --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
     echo "Repository exists and is healthy"
+    if [ -z "$SAVED_REMOTE_BACKUP_PATH" ]; then
+        echo $REMOTE_BACKUP_PATH > /config/repo_exists
+    fi
 else
     echo "Repository does not exist"
+    # Avoid creating a new repository if the old one is not available
+    if [ -n "$SAVED_REMOTE_BACKUP_PATH" ]; then
+        echo "The previously used repository is not available. Check the remote path or create a new repository."
+        exit 1
+    fi
     borg init --encryption=repokey $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
     borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH --passphrase $BORG_PASSPHRASE --output /keys/repo_key
+    echo $REMOTE_BACKUP_PATH > /config/repo_exists
 fi
+
+
+# 8. Save enviromental variables 
+export -p  > /scripts/env_variables.txt
+
+# 9. Setup log rotation 
+cat <<EOF > /etc/logrotate.d/backup
+/config/backup.log {
+    size 300M
+    rotate 2
+    copytruncate
+    compress
+    missingok
+    notifempty
+}
+EOF
+
 
 # 7. Schedule the backup
 # TODO: make a separate script that can lock up the command in case the backup is not complete 
 echo "Scheduling backup"
-echo "$CRON_SCHEDULE /scripts/backup.sh >> /config/backup.log 2>&1 && cat /config/backup.log > /proc/1/fd/1" > /etc/crontabs/root
-
+echo "$CRON_SCHEDULE /bin/bash -c '/scripts/backup.sh 2>&1 | tee /config/backup.log | cat > /proc/1/fd/1'" > /etc/crontabs/root
 # 8. Check if the cron service is running
 if pgrep crond > /dev/null; then
     echo "crond is running"
 else
     echo "crond is NOT running"
-    crond 
+    crond -f -s 
     echo "crond started"
 fi
-
-# 8. Save enviromental variables 
-export -p  > /scripts/env_variables.txt
