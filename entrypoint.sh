@@ -84,12 +84,32 @@ else
     exit 1
 fi
 
+# To avoid issues where a drive where the borg repo is stored is not mounted yet
+if [ -e /config/repo_exists ]; then
+    echo "Found repo_exists file"
+    SAVED_REMOTE_BACKUP_PATH=$(cat /config/repo_exists)
+    if [ "$SAVED_REMOTE_BACKUP_PATH" == "$REMOTE_BACKUP_PATH" ]; then
+        echo "Remote backup path matches saved path"
+    else
+        echo "Remote backup path does not match saved path, updating..."
+        echo $REMOTE_BACKUP_PATH > /config/repo_exists
+    fi
+else
+    echo "repo_exists file not found"
+fi
+
 if borg check --repository-only --max-duration 10 --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
     echo "Repository exists and is healthy"
 else
     echo "Repository does not exist"
+    # Avoid creating a new repository if the old one is not available
+    if [ -n "$SAVED_REMOTE_BACKUP_PATH" ]; then
+        echo "The previously used repository is not available. Check the remote path or create a new repository."
+        exit 1
+    fi
     borg init --encryption=repokey $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
     borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH --passphrase $BORG_PASSPHRASE --output /keys/repo_key
+    echo $REMOTE_BACKUP_PATH > /config/repo_exists
 fi
 
 # 7. Schedule the backup
