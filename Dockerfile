@@ -22,4 +22,6 @@ ENV TZ=Etc/UTC
 RUN apk add --no-cache bash borgbackup openssh cronie nano grep pv tzdata coreutils logrotate 
 RUN chmod +x /scripts/entrypoint.sh /scripts/backup.sh /scripts/check_backups.sh
 
+USER root
+
 ENTRYPOINT ["/bin/sh", "-c", ". /scripts/entrypoint.sh 2>&1 | tee /proc/1/fd/1 && tail -f /dev/null"]

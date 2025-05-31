@@ -100,6 +100,10 @@ fi
 
 if borg check --repository-only --max-duration 10 --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
     echo "Repository exists and is healthy"
+    if [ -n "$SAVED_REMOTE_BACKUP_PATH" ]; then
+        echo "Using previously saved repository path: $SAVED_REMOTE_BACKUP_PATH"
+        echo $REMOTE_BACKUP_PATH > /config/repo_exists
+    fi
 else
     echo "Repository does not exist"
     # Avoid creating a new repository if the old one is not available
@@ -132,7 +136,7 @@ EOF
 # 7. Schedule the backup
 # TODO: make a separate script that can lock up the command in case the backup is not complete 
 echo "Scheduling backup"
-echo "$CRON_SCHEDULE /bin/bash -c '/scripts/backup.sh 2>&1 | tee /config/backup.log > /dev/stdout'" > /etc/crontabs/root
+echo "$CRON_SCHEDULE /bin/bash -c '/scripts/backup.sh 2>&1 | tee /config/backup.log | cat > /proc/1/fd/1'" > /etc/crontabs/root
 # 8. Check if the cron service is running
 if pgrep crond > /dev/null; then
     echo "crond is running"
