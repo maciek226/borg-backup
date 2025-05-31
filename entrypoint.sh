@@ -100,8 +100,7 @@ fi
 
 if borg check --repository-only --max-duration 10 --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
     echo "Repository exists and is healthy"
-    if [ -n "$SAVED_REMOTE_BACKUP_PATH" ]; then
-        echo "Using previously saved repository path: $SAVED_REMOTE_BACKUP_PATH"
+    if [ -z "$SAVED_REMOTE_BACKUP_PATH" ]; then
         echo $REMOTE_BACKUP_PATH > /config/repo_exists
     fi
 else
