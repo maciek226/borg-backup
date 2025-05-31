@@ -112,19 +112,32 @@ else
     echo $REMOTE_BACKUP_PATH > /config/repo_exists
 fi
 
+
+# 8. Save enviromental variables 
+export -p  > /scripts/env_variables.txt
+
+# 9. Setup log rotation 
+cat <<EOF > /etc/logrotate.d/backup
+/config/backup.log {
+    size 300M
+    rotate 2
+    copytruncate
+    compress
+    missingok
+    notifempty
+}
+EOF
+
+
 # 7. Schedule the backup
 # TODO: make a separate script that can lock up the command in case the backup is not complete 
 echo "Scheduling backup"
-echo "$CRON_SCHEDULE /scripts/backup.sh >> /config/backup.log 2>&1 && cat /config/backup.log > /proc/1/fd/1" > /etc/crontabs/root
-
+echo "$CRON_SCHEDULE /bin/bash -c '/scripts/backup.sh 2>&1 | tee /config/backup.log > /dev/stdout'" > /etc/crontabs/root
 # 8. Check if the cron service is running
 if pgrep crond > /dev/null; then
     echo "crond is running"
 else
     echo "crond is NOT running"
-    crond 
+    crond -f -s 
     echo "crond started"
 fi
-
-# 8. Save enviromental variables 
-export -p  > /scripts/env_variables.txt
