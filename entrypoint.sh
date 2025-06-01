@@ -101,7 +101,7 @@ fi
 if borg check --repository-only --max-duration 10 --show-rc $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
     echo "Repository exists and is healthy"
     if [ -z "$SAVED_REMOTE_BACKUP_PATH" ]; then
-        echo $REMOTE_BACKUP_PATH > /config/repo_exists
+5        echo $REMOTE_BACKUP_PATH > /config/repo_exists
     fi
 else
     echo "Repository does not exist"
@@ -111,7 +111,7 @@ else
         exit 1
     fi
     borg init --encryption=repokey $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-    borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH --passphrase $BORG_PASSPHRASE --output /keys/repo_key
+    borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH >> /keys/repo_key
     echo $REMOTE_BACKUP_PATH > /config/repo_exists
 fi
 
