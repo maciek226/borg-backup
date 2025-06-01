@@ -1,37 +1,12 @@
 #!/bin/bash
 
 source /scripts/env_variables.txt
+source /scripts/check_repo.sh
+sourve /scripts/check_remote_server.sh
 
 echo "Starting backup script..."
 CURRENT_TIME=$(date +%Y-%m-%d_%H-%M-%S)
 echo "Current time: $CURRENT_TIME"
-
-check_remote_server() {
-    local REMOTE_IP=$1
-    ping -c 5 -W 2 "$REMOTE_IP"
-    
-    if [ $? -eq 0 ]; then
-        echo "Remote server is reachable"
-    else
-        echo "Remote server is not reachable"
-        return 1
-    fi
-}
-check_repo() {
-    local REMOTE_USER=$1
-    local REMOTE_IP=$2
-    local REMOTE_BACKUP_PATH=$3
-
-    borg check --repository-only --max-duration 10 --show-rc "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH"
-    
-    if [ $? -eq 0 ]; then
-        echo "Repository exists and is healthy"
-        return 0
-    else
-        echo "Repository does not exist or is unhealthy"
-        return 1
-    fi
-}
 
 check_remote_server $REMOTE_IP || exit 1
 

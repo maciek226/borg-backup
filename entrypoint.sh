@@ -110,14 +110,22 @@ else
         echo "The previously used repository is not available. Check the remote path or create a new repository."
         exit 1
     fi
-    borg init --encryption=repokey $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-    borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH >> /keys/repo_key
+    if borg init --encryption=repokey $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH; then
+        echo "Repository initialized successfully"
+    else
+        echo "Failed to initialize repository"
+        exit 1
+    fi
+    if ! borg key export $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH >> /keys/repo_key; then
+        echo "Failed to export repository key"
+        exit 1
+    fi
     echo $REMOTE_BACKUP_PATH > /config/repo_exists
 fi
 
 
 # 8. Save enviromental variables 
-export -p  > /scripts/env_variables.txt
+export -p > /scripts/env_variables.txt
 
 # 9. Setup log rotation 
 cat <<EOF > /etc/logrotate.d/backup
@@ -141,6 +149,6 @@ if pgrep crond > /dev/null; then
     echo "crond is running"
 else
     echo "crond is NOT running"
-    crond -f -s 
-    echo "crond started"
+    echo "starting crond"
+    crond -f -s
 fi
