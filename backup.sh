@@ -74,7 +74,7 @@ if [ "$CREATE_NEW_BACKUP" = true ]; then
     echo "$NEW_NAME" > "$BACKUP_LOG_FILE"
     while true; do
         borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-        borg create --progress --stats --show-rc  $EXCLUDE_FLAGS --checkpoint-interval 60 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$NEW_NAME $INCLUDE_FLAGS
+        borg create --log-json --stats --show-rc  $EXCLUDE_FLAGS --checkpoint-interval 60 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$NEW_NAME $INCLUDE_FLAGS
         echo $?
         if [ $? -eq 0 ]; then
             echo "Backup successful"
@@ -89,7 +89,7 @@ else
     echo "Continuing previous backup"
     while true; do
         borg break-lock $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
-        borg create --show-rc --stats --progress $EXCLUDE_FLAGS --checkpoint-interval 60 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
+        borg create --log-json --stats --show-rc  $EXCLUDE_FLAGS --checkpoint-interval 60 $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH::$PREVIOUS_BACKUP_NAME $INCLUDE_FLAGS
         if [ $? -eq 0 ]; then
             echo "Backup successful"
             break
@@ -102,14 +102,14 @@ else
     done
 fi
 
-borg prune --show-rc --progress $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+borg prune --show-rc --log-json $BORG_PRUNE_CMD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
 if [ $? -eq 0 ]; then
     echo "Pruning successful"
 else
     echo "Pruning failed"
 fi
 
-borg compact --progress --show-rc --threshold $COMPACT_THRESHOLD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
+borg compact --log-json --show-rc --threshold $COMPACT_THRESHOLD $REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH
 if [ $? -eq 0 ]; then
     echo "Compacting successful"
 else
