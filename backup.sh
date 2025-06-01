@@ -17,6 +17,21 @@ check_remote_server() {
         return 1
     fi
 }
+check_repo() {
+    local REMOTE_USER=$1
+    local REMOTE_IP=$2
+    local REMOTE_BACKUP_PATH=$3
+
+    borg check --repository-only --max-duration 10 --show-rc "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_PATH"
+    
+    if [ $? -eq 0 ]; then
+        echo "Repository exists and is healthy"
+        return 0
+    else
+        echo "Repository does not exist or is unhealthy"
+        return 1
+    fi
+}
 
 check_remote_server $REMOTE_IP || exit 1
 
@@ -84,6 +99,7 @@ if [ "$CREATE_NEW_BACKUP" = true ]; then
         fi
         # Check connection
         check_remote_server $REMOTE_IP || exit 1
+        check_repo $REMOTE_USER $REMOTE_IP $REMOTE_BACKUP_PATH || exit 1
     done
 else
     echo "Continuing previous backup"
@@ -99,6 +115,7 @@ else
 
         # Check connection
         check_remote_server $REMOTE_IP || exit 1
+        check_repo $REMOTE_USER $REMOTE_IP $REMOTE_BACKUP_PATH || exit 1
     done
 fi
 
