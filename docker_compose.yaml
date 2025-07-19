@@ -12,6 +12,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
+      - REMOTE_IP= # The public IP of the remote server for health checks
     volumes:
       - /path/to/config/:/config/wg_confs/
       - /lib/modules:/lib/modules
@@ -20,6 +21,12 @@ services:
     restart: unless-stopped
     labels:
       - com.centurylinklabs.watchtower.monitor-only="true"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ping -c 1 $REMOTE_IP"]
+      interval: 10m
+      timeout: 10s
+      retries: 4
+      start_period: 10s
 
   borg:
     image: mbl226/borg-backup:latest
@@ -50,3 +57,9 @@ services:
     labels:
      - com.centurylinklabs.watchtower.monitor-only="true" # Recommended if using watchtower to not interrupt the backups
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ping -c 1 $REMOTE_IP"]
+      interval: 1h
+      timeout: 10s
+      retries: 4
+      start_period: 10s
